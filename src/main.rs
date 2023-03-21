@@ -8,7 +8,14 @@ fn game_from_especific_file(input: &str) -> Result<(), Error> {
 
     let mut game: CoconutGame = buffer.parse()?;
 
-    println!("{} winner: {}", input, game.play());
+    // let winner = match game.play() {
+    //     Some(w) => w,
+    //     None => todo!(),
+    // };
+    //
+    let winner = game.play();
+
+    println!("{} winner: {}", input, winner);
 
     Ok(())
 }

@@ -52,11 +52,11 @@ impl CoconutGame {
     fn pass_coconuts(&self, monkey: MonkeyRef, other: MonkeyRef, coconut_type: CoconutType) {
         match coconut_type {
             CoconutType::Even => {
-                other.borrow_mut().evens += monkey.borrow_mut().evens;
+                other.borrow_mut().evens += monkey.borrow().evens;
                 monkey.borrow_mut().evens = 0;
             }
             CoconutType::Odd => {
-                other.borrow_mut().odds += monkey.borrow_mut().odds;
+                other.borrow_mut().odds += monkey.borrow().odds;
                 monkey.borrow_mut().odds = 0;
             }
         }
@@ -68,32 +68,25 @@ impl CoconutGame {
         while rounds > 0 {
             rounds -= 1;
 
-            for i in 0..self.monkeys.len() {
-                let monkey = self.monkeys[i].clone();
+            for monkey in &self.monkeys {
+                let monkey = monkey.clone();
 
-                let even_monkey = self.monkeys[monkey.borrow_mut().even].clone();
-                let odd_monkey = self.monkeys[monkey.borrow_mut().odd].clone();
+                let even_monkey = self.monkeys[monkey.borrow().even].clone();
+                let odd_monkey = self.monkeys[monkey.borrow().odd].clone();
 
                 self.pass_coconuts(monkey.clone(), even_monkey, CoconutType::Even);
                 self.pass_coconuts(monkey, odd_monkey, CoconutType::Even);
             }
         }
 
-        let first_monkey = self.monkeys[0].clone();
-
-        let mut winner = 0;
-        let mut max = first_monkey.borrow().evens + first_monkey.clone().borrow().odds;
-
-        for (index, monkey) in self.monkeys.iter().enumerate().skip(1) {
-            let monkey = monkey.clone();
-
-            let total = monkey.borrow().evens + monkey.clone().borrow().odds;
-
-            if total > max {
-                max = total;
-                winner = index;
-            }
-        }
+        let winner = self
+            .monkeys
+            .iter()
+            .map(|m| m.borrow().odds + m.borrow().evens)
+            .enumerate()
+            .max_by(|curr, other| curr.1.cmp(&other.1))
+            .unwrap()
+            .0;
 
         return winner;
     }
@@ -113,13 +106,17 @@ impl FromStr for CoconutGame {
             .nth(0)
             .unwrap();
 
-        let monkeys = s
+        let monkeys: Vec<_> = s
             .lines()
             .skip(1)
             .map(|line| line.parse::<Monkey>().ok())
             .flatten()
             .map(|monkey| Rc::new(RefCell::new(monkey)))
             .collect();
+
+        if monkeys.len() < 2 {
+            return Err(anyhow::anyhow!("The game has to have at least 2 monkeys."));
+        }
 
         Ok(Self { rounds, monkeys })
     }
