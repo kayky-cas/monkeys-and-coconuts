@@ -69,13 +69,11 @@ impl CoconutGame {
             rounds -= 1;
 
             for monkey in &self.monkeys {
-                let monkey = monkey.clone();
-
                 let even_monkey = self.monkeys[monkey.borrow().even].clone();
                 let odd_monkey = self.monkeys[monkey.borrow().odd].clone();
 
                 self.pass_coconuts(monkey.clone(), even_monkey, CoconutType::Even);
-                self.pass_coconuts(monkey, odd_monkey, CoconutType::Even);
+                self.pass_coconuts(monkey.clone(), odd_monkey, CoconutType::Even);
             }
         }
 
