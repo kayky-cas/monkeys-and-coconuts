@@ -7,12 +7,6 @@ fn game_from_especific_file(input: &str) -> Result<(), Error> {
     let buffer = fs::read_to_string(input)?;
 
     let mut game: CoconutGame = buffer.parse()?;
-
-    // let winner = match game.play() {
-    //     Some(w) => w,
-    //     None => todo!(),
-    // };
-    //
     let winner = game.play();
 
     println!("{} winner: {}", input, winner);
@@ -43,7 +37,7 @@ fn game_from_folder(folder: &str) -> Result<(), Error> {
 }
 
 fn main() -> Result<(), Error> {
-    let _program_name = env::args()
+    let _ = env::args()
         .nth(0)
         .ok_or(anyhow::anyhow!("Invalid program name"))?;
 
@@ -51,12 +45,7 @@ fn main() -> Result<(), Error> {
 
     if args.is_empty() {
         game_from_folder("./casos")?;
-
         return Ok(());
-        //return Err(anyhow::anyhow!(
-        //    "{} needs at least 1 argument to execute.",
-        //    program_name
-        //));
     }
 
     let input_name = &args[0];
