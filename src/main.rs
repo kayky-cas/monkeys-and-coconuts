@@ -1,27 +1,24 @@
 use std::{env, fs, thread};
 
-use anyhow::Error;
 use monkeys_and_coconuts::CoconutGame;
 
-fn game_from_especific_file(input: &str) -> Result<(), Error> {
-    let buffer = fs::read_to_string(input)?;
+fn game_from_especific_file(input: &str) {
+    let buffer = fs::read_to_string(input).unwrap();
 
-    let mut game: CoconutGame = buffer.parse()?;
+    let mut game: CoconutGame = buffer.parse().unwrap();
     let winner = game.play();
 
     println!("{} winner: {}", input, winner);
-
-    Ok(())
 }
 
-fn game_from_folder(folder: &str) -> Result<(), Error> {
-    let dir = fs::read_dir(folder)?;
+fn game_from_folder(folder: &str) {
+    let dir = fs::read_dir(folder).unwrap();
 
     let mut threads = Vec::new();
 
     for file in dir.into_iter().map(|f| f.ok()).flatten() {
         let tr = thread::spawn(move || {
-            let _ = game_from_especific_file(&file.path().to_str().unwrap());
+            game_from_especific_file(&file.path().to_str().unwrap());
         });
 
         threads.push(tr);
@@ -32,25 +29,19 @@ fn game_from_folder(folder: &str) -> Result<(), Error> {
             break;
         }
     }
-
-    Ok(())
 }
 
-fn main() -> Result<(), Error> {
+fn main() {
     let _ = env::args()
         .nth(0)
-        .ok_or(anyhow::anyhow!("Invalid program name"))?;
+        .unwrap();
 
     let args: Vec<_> = env::args().skip(1).collect();
 
     if args.is_empty() {
-        game_from_folder("./casos")?;
-        return Ok(());
+        game_from_folder("./casos");
+    } else {
+        let input_name = &args[0];
+        game_from_especific_file(input_name);
     }
-
-    let input_name = &args[0];
-
-    game_from_especific_file(input_name)?;
-
-    Ok(())
 }

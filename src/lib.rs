@@ -14,7 +14,7 @@ pub struct Monkey {
 }
 
 impl FromStr for Monkey {
-    type Err = anyhow::Error;
+    type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let numbers: Vec<_> = s
@@ -91,13 +91,13 @@ impl CoconutGame {
 }
 
 impl FromStr for CoconutGame {
-    type Err = anyhow::Error;
+    type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let rounds = s
             .lines()
             .nth(0)
-            .ok_or(anyhow::anyhow!("Round not found at the top of the file!"))?
+            .unwrap()
             .split(' ')
             .map(|s| s.parse::<i32>().ok())
             .flatten()
@@ -113,7 +113,7 @@ impl FromStr for CoconutGame {
             .collect();
 
         if monkeys.len() < 2 {
-            return Err(anyhow::anyhow!("The game has to have at least 2 monkeys."));
+            return Err(());
         }
 
         Ok(Self { rounds, monkeys })
