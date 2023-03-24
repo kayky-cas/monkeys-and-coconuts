@@ -1,4 +1,4 @@
-use std::{env, fs, thread};
+use std::{env, fs, thread, time::Instant};
 
 use monkeys_and_coconuts::CoconutGame;
 
@@ -16,25 +16,25 @@ fn game_from_folder(folder: &str) {
 
     let mut threads = Vec::new();
 
+    let stopwatch = Instant::now();
+
     for file in dir.into_iter().map(|f| f.ok()).flatten() {
-        let tr = thread::spawn(move || {
+        let handler = thread::spawn(move || {
             game_from_especific_file(&file.path().to_str().unwrap());
         });
 
-        threads.push(tr);
+        threads.push(handler);
     }
 
-    loop {
-        if threads.iter().filter(|tr| !tr.is_finished()).count() == 0 {
-            break;
-        }
+    for handler in threads {
+        let _ = handler.join();
     }
+
+    println!("Elapsed: {:?}", stopwatch.elapsed());
 }
 
 fn main() {
-    let _ = env::args()
-        .nth(0)
-        .unwrap();
+    let _ = env::args().nth(0).unwrap();
 
     let args: Vec<_> = env::args().skip(1).collect();
 
