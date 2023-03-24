@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc, str::FromStr};
+use std::{cell::RefCell, collections::VecDeque, rc::Rc, str::FromStr};
 
 pub enum CoconutType {
     Even,
@@ -77,16 +77,13 @@ impl CoconutGame {
             }
         }
 
-        let winner = self
-            .monkeys
+        self.monkeys
             .iter()
             .map(|m| m.borrow().odds + m.borrow().evens)
             .enumerate()
             .max_by(|curr, other| curr.1.cmp(&other.1))
             .unwrap()
-            .0;
-
-        return winner;
+            .0
     }
 }
 
@@ -94,9 +91,10 @@ impl FromStr for CoconutGame {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let rounds = s
-            .lines()
-            .nth(0)
+        let mut lines: VecDeque<&str> = s.lines().collect();
+
+        let rounds = lines
+            .pop_front()
             .unwrap()
             .split(' ')
             .map(|s| s.parse::<i32>().ok())
@@ -104,9 +102,8 @@ impl FromStr for CoconutGame {
             .nth(0)
             .unwrap();
 
-        let monkeys: Vec<_> = s
-            .lines()
-            .skip(1)
+        let monkeys: Vec<_> = lines
+            .iter()
             .map(|line| line.parse::<Monkey>().ok())
             .flatten()
             .map(|monkey| Rc::new(RefCell::new(monkey)))
