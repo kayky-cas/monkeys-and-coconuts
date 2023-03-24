@@ -1,4 +1,4 @@
-use std::{env, fs, thread};
+use std::{env, fs, thread, time::Instant};
 
 use anyhow::Error;
 use monkeys_and_coconuts::CoconutGame;
@@ -19,6 +19,8 @@ fn game_from_folder(folder: &str) -> Result<(), Error> {
 
     let mut threads = Vec::new();
 
+    let stopwatch = Instant::now();
+
     for file in dir.into_iter().map(|f| f.ok()).flatten() {
         let tr = thread::spawn(move || {
             let _ = game_from_especific_file(&file.path().to_str().unwrap());
@@ -32,6 +34,8 @@ fn game_from_folder(folder: &str) -> Result<(), Error> {
             break;
         }
     }
+
+    println!("Elapsed: {:?}", stopwatch.elapsed());
 
     Ok(())
 }
