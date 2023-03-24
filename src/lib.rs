@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::VecDeque, rc::Rc, str::FromStr};
+use std::{cell::RefCell, collections::VecDeque, fs, rc::Rc, str::FromStr, time::Instant};
 
 pub enum CoconutType {
     Even,
@@ -115,4 +115,38 @@ impl FromStr for CoconutGame {
 
         Ok(Self { rounds, monkeys })
     }
+}
+
+pub fn game_from_file(input: &str) {
+    let buffer = fs::read_to_string(input).unwrap();
+    let stopwatch = Instant::now();
+    let winner = game_from_buffer(&buffer);
+    println!("{} winner: {} in {:?}", input, winner, stopwatch.elapsed());
+}
+
+fn game_from_buffer(buffer: &str) -> usize {
+    let mut game: CoconutGame = buffer.parse().unwrap();
+    return game.play();
+}
+
+pub fn game_from_folder(path: &str) {
+    let dir = fs::read_dir(path).unwrap();
+
+    let mut threads = Vec::new();
+
+    let stopwatch = Instant::now();
+
+    for file in dir.into_iter().map(|f| f.ok()).flatten() {
+        let handler = std::thread::spawn(move || {
+            game_from_file(&file.path().to_str().unwrap());
+        });
+
+        threads.push(handler);
+    }
+
+    for handler in threads {
+        let _ = handler.join();
+    }
+
+    println!("\nElapsed: {:?}", stopwatch.elapsed());
 }
