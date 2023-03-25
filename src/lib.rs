@@ -28,7 +28,7 @@ impl FromStr for Monkey {
         let even = numbers[0];
         let odd = numbers[1];
 
-        let coconuts = &numbers[1..];
+        let coconuts = &numbers[2..];
         let evens = coconuts.iter().filter(|&x| x % 2 == 0).count();
         let odds = coconuts.len() - evens;
 
@@ -44,7 +44,7 @@ impl FromStr for Monkey {
 type MonkeyRef = Rc<RefCell<Monkey>>;
 
 pub struct CoconutGame {
-    rounds: i32,
+    pub rounds: i32,
     monkeys: Vec<MonkeyRef>,
 }
 
@@ -62,7 +62,7 @@ impl CoconutGame {
         }
     }
 
-    pub fn play(&mut self) -> usize {
+    pub fn play(&mut self) -> (usize, usize) {
         let mut rounds = self.rounds;
 
         while rounds > 0 {
@@ -83,8 +83,7 @@ impl CoconutGame {
             .map(|m| m.borrow().odds + m.borrow().evens)
             .enumerate()
             .max_by(|curr, other| curr.1.cmp(&other.1))
-            .unwrap()
-            .0;
+            .unwrap();
 
         return winner;
     }

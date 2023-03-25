@@ -6,9 +6,12 @@ fn game_from_especific_file(input: &str) {
     let buffer = fs::read_to_string(input).unwrap();
 
     let mut game: CoconutGame = buffer.parse().unwrap();
-    let winner = game.play();
+    let (winner, coconuts) = game.play();
 
-    println!("{} winner: {}", input, winner);
+    println!(
+        "{} winner: {} with {} cocunuts in {} rounds!",
+        input, winner, coconuts, game.rounds
+    );
 }
 
 fn game_from_folder(folder: &str) {
