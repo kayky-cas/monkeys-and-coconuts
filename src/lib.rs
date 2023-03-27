@@ -1,121 +1,83 @@
-use std::{cell::RefCell, rc::Rc, str::FromStr};
-
-pub enum CoconutType {
-    Even,
-    Odd,
-}
-
-#[derive(Debug)]
-pub struct Monkey {
-    even: usize,
-    odd: usize,
-    evens: usize,
-    odds: usize,
-}
-
-impl FromStr for Monkey {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let numbers: Vec<_> = s
-            .trim()
-            .split(' ')
-            .map(|s| s.parse::<usize>().ok())
-            .flatten()
-            .skip(1)
-            .collect();
-
-        let even = numbers[0];
-        let odd = numbers[1];
-
-        let coconuts = &numbers[1..];
-        let evens = coconuts.iter().filter(|&x| x % 2 == 0).count();
-        let odds = coconuts.len() - evens;
-
-        Ok(Self {
-            even,
-            odd,
-            evens,
-            odds,
-        })
-    }
-}
-
-type MonkeyRef = Rc<RefCell<Monkey>>;
+use std::str::FromStr;
 
 pub struct CoconutGame {
-    rounds: i32,
-    monkeys: Vec<MonkeyRef>,
+    pub rounds: usize,
+    monkeys: Vec<(usize, usize)>,
+    coconuts: Vec<(usize, usize)>,
 }
 
 impl CoconutGame {
-    fn pass_coconuts(&self, monkey: MonkeyRef, other: MonkeyRef, coconut_type: CoconutType) {
-        match coconut_type {
-            CoconutType::Even => {
-                other.borrow_mut().evens += monkey.borrow().evens;
-                monkey.borrow_mut().evens = 0;
-            }
-            CoconutType::Odd => {
-                other.borrow_mut().odds += monkey.borrow().odds;
-                monkey.borrow_mut().odds = 0;
-            }
-        }
-    }
-
-    pub fn play(&mut self) -> usize {
+    pub fn play(&mut self) -> (usize, usize) {
         let mut rounds = self.rounds;
 
         while rounds > 0 {
             rounds -= 1;
 
-            for monkey in &self.monkeys {
-                let even_monkey = self.monkeys[monkey.borrow().even].clone();
-                let odd_monkey = self.monkeys[monkey.borrow().odd].clone();
+            for x in 0..self.monkeys.len() {
+                self.coconuts[self.monkeys[x].0].0 += self.coconuts[x].0;
+                self.coconuts[x].0 = 0;
 
-                self.pass_coconuts(monkey.clone(), even_monkey, CoconutType::Even);
-                self.pass_coconuts(monkey.clone(), odd_monkey, CoconutType::Even);
+                self.coconuts[self.monkeys[x].1].1 += self.coconuts[x].1;
+                self.coconuts[x].1 = 0;
             }
         }
 
-        let winner = self
-            .monkeys
-            .iter()
-            .map(|m| m.borrow().odds + m.borrow().evens)
-            .enumerate()
-            .max_by(|curr, other| curr.1.cmp(&other.1))
-            .unwrap()
-            .0;
-
-        return winner;
+        return (0..self.monkeys.len())
+            .map(|x| (x, self.coconuts[x].0 + self.coconuts[x].1))
+            .max_by(|curr, oth| curr.1.cmp(&oth.1))
+            .unwrap();
     }
 }
 
 impl FromStr for CoconutGame {
-    type Err = anyhow::Error;
+    type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let rounds = s
             .lines()
             .nth(0)
-            .ok_or(anyhow::anyhow!("Round not found at the top of the file!"))?
+            .unwrap()
             .split(' ')
-            .map(|s| s.parse::<i32>().ok())
+            .map(|s| s.parse().ok())
             .flatten()
             .nth(0)
             .unwrap();
 
-        let monkeys: Vec<_> = s
+        let monkeys_arr: Vec<_> = s
             .lines()
             .skip(1)
-            .map(|line| line.parse::<Monkey>().ok())
-            .flatten()
-            .map(|monkey| Rc::new(RefCell::new(monkey)))
+            .map(|line| {
+                line.split(' ')
+                    .map(|x| x.parse::<usize>().ok())
+                    .flatten()
+                    .collect::<Vec<_>>()
+            })
             .collect();
 
-        if monkeys.len() < 2 {
-            return Err(anyhow::anyhow!("The game has to have at least 2 monkeys."));
+        let mut monkeys = Vec::new();
+        let mut coconuts = Vec::new();
+
+        for monkey in monkeys_arr {
+            monkeys.push((monkey[1], monkey[2]));
+
+            let mut odd_c = 0;
+            let mut even_c = 0;
+
+            for coconut in &monkey[2..] {
+                if *coconut % 2 == 0 {
+                    even_c += 1;
+                } else {
+                    odd_c += 1;
+                }
+            }
+
+            coconuts.push((even_c, odd_c));
         }
 
-        Ok(Self { rounds, monkeys })
+        Ok(Self {
+            rounds,
+            monkeys,
+            coconuts,
+        })
     }
 }
