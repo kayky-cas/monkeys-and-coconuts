@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::VecDeque, fs, rc::Rc, str::FromStr, time::Instant};
+use std::{cell::RefCell, rc::Rc, str::FromStr};
 
 pub enum CoconutType {
     Even,
@@ -28,7 +28,7 @@ impl FromStr for Monkey {
         let even = numbers[0];
         let odd = numbers[1];
 
-        let coconuts = &numbers[1..];
+        let coconuts = &numbers[2..];
         let evens = coconuts.iter().filter(|&x| x % 2 == 0).count();
         let odds = coconuts.len() - evens;
 
@@ -44,7 +44,7 @@ impl FromStr for Monkey {
 type MonkeyRef = Rc<RefCell<Monkey>>;
 
 pub struct CoconutGame {
-    rounds: i32,
+    pub rounds: i32,
     monkeys: Vec<MonkeyRef>,
 }
 
@@ -62,7 +62,7 @@ impl CoconutGame {
         }
     }
 
-    pub fn play(&mut self) -> usize {
+    pub fn play(&mut self) -> (usize, usize) {
         let mut rounds = self.rounds;
 
         while rounds > 0 {
@@ -77,13 +77,15 @@ impl CoconutGame {
             }
         }
 
-        self.monkeys
+        let winner = self
+            .monkeys
             .iter()
             .map(|m| m.borrow().odds + m.borrow().evens)
             .enumerate()
             .max_by(|curr, other| curr.1.cmp(&other.1))
-            .unwrap()
-            .0
+            .unwrap();
+
+        return winner;
     }
 }
 
@@ -91,10 +93,9 @@ impl FromStr for CoconutGame {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut lines: VecDeque<&str> = s.lines().collect();
-
-        let rounds = lines
-            .pop_front()
+        let rounds = s
+            .lines()
+            .nth(0)
             .unwrap()
             .split(' ')
             .map(|s| s.parse::<i32>().ok())
@@ -102,8 +103,9 @@ impl FromStr for CoconutGame {
             .nth(0)
             .unwrap();
 
-        let monkeys: Vec<_> = lines
-            .iter()
+        let monkeys: Vec<_> = s
+            .lines()
+            .skip(1)
             .map(|line| line.parse::<Monkey>().ok())
             .flatten()
             .map(|monkey| Rc::new(RefCell::new(monkey)))
@@ -115,38 +117,4 @@ impl FromStr for CoconutGame {
 
         Ok(Self { rounds, monkeys })
     }
-}
-
-pub fn game_from_file(input: &str) {
-    let buffer = fs::read_to_string(input).unwrap();
-    let stopwatch = Instant::now();
-    let winner = game_from_buffer(&buffer);
-    println!("{} winner: {} in {:?}", input, winner, stopwatch.elapsed());
-}
-
-fn game_from_buffer(buffer: &str) -> usize {
-    let mut game: CoconutGame = buffer.parse().unwrap();
-    return game.play();
-}
-
-pub fn game_from_folder(path: &str) {
-    let dir = fs::read_dir(path).unwrap();
-
-    let mut threads = Vec::new();
-
-    let stopwatch = Instant::now();
-
-    for file in dir.into_iter().map(|f| f.ok()).flatten() {
-        let handler = std::thread::spawn(move || {
-            game_from_file(&file.path().to_str().unwrap());
-        });
-
-        threads.push(handler);
-    }
-
-    for handler in threads {
-        let _ = handler.join();
-    }
-
-    println!("\nElapsed: {:?}", stopwatch.elapsed());
 }
