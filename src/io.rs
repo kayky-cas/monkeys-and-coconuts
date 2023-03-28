@@ -11,7 +11,7 @@ fn game_from_especific_file(input: &str) {
     let (winner, coconuts) = game.play();
 
     println!(
-        "{} winner: {} with {} cocunuts in {} rounds! {:?}",
+        "{} winner: {} with {} coconuts in {} rounds! {:?}",
         input,
         winner,
         coconuts,

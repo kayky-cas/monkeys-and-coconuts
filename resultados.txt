@@ -1,0 +1,9 @@
+./casos/caso0050.txt winner: 9 with 2332 cocunuts in 5000 rounds! 2.835667ms
+./casos/caso0100.txt winner: 20 with 15461 cocunuts in 10000 rounds! 6.424292ms
+./casos/caso0200.txt winner: 38 with 74413 cocunuts in 20000 rounds! 17.541708ms
+./casos/caso0400.txt winner: 36 with 145232 cocunuts in 40000 rounds! 46.287292ms
+./casos/caso0600.txt winner: 177 with 230276 cocunuts in 60000 rounds! 66.583584ms
+./casos/caso0800.txt winner: 20 with 182575 cocunuts in 80000 rounds! 104.631583ms
+./casos/caso0900.txt winner: 589 with 433295 cocunuts in 90000 rounds! 129.805083ms
+./casos/caso1000.txt winner: 144 with 581995 cocunuts in 100000 rounds! 161.460167ms
+Elapsed: 564.94625ms
