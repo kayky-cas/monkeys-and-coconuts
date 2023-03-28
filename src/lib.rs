@@ -10,20 +10,24 @@ struct Monkey {
 impl FromStr for Monkey {
     type Err = ();
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let monkey_info = s
+    fn from_str(buffer: &str) -> Result<Self, Self::Err> {
+        let monkey_info: Vec<_> = buffer
             .split(' ')
-            .map(|x| x.parse::<usize>())
+            .map(|word| word.parse())
             .flatten()
             .skip(1)
-            .collect::<Vec<_>>();
+            .collect();
 
         let even = monkey_info[0];
         let odd = monkey_info[1];
 
         let coconuts = &monkey_info[2..];
 
-        let even_coconuts = coconuts.iter().filter(|&x| x % 2 == 0).count();
+        let even_coconuts = coconuts
+            .iter()
+            .filter(|&coconut| coconut & 0b1 == 0)
+            .count();
+
         let odd_coconuts = coconuts.len() - even_coconuts;
 
         Ok(Self {
@@ -47,24 +51,22 @@ impl CoconutGame {
         while rounds > 0 {
             rounds -= 1;
 
-            for x in 0..self.monkeys.len() {
-                let even = self.monkeys[x].even;
-                self.monkeys[even].even_coconuts += self.monkeys[x].even_coconuts;
-                self.monkeys[x].even_coconuts = 0;
+            for index in 0..self.monkeys.len() {
+                let even_index = self.monkeys[index].even;
+                self.monkeys[even_index].even_coconuts += self.monkeys[index].even_coconuts;
+                self.monkeys[index].even_coconuts = 0;
 
-                let odd = self.monkeys[x].odd;
-                self.monkeys[odd].odd_coconuts += self.monkeys[x].odd_coconuts;
-                self.monkeys[x].odd_coconuts = 0;
+                let odd_index = self.monkeys[index].odd;
+                self.monkeys[odd_index].odd_coconuts += self.monkeys[index].odd_coconuts;
+                self.monkeys[index].odd_coconuts = 0;
             }
         }
 
-        return (0..self.monkeys.len())
-            .map(|x| {
-                (
-                    x,
-                    self.monkeys[x].odd_coconuts + self.monkeys[x].even_coconuts,
-                )
-            })
+        return self
+            .monkeys
+            .iter()
+            .enumerate()
+            .map(|(index, monkey)| (index, monkey.odd_coconuts + monkey.even_coconuts))
             .max_by(|curr, oth| curr.1.cmp(&oth.1))
             .unwrap();
     }
@@ -73,19 +75,19 @@ impl CoconutGame {
 impl FromStr for CoconutGame {
     type Err = ();
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut lines = s.lines();
+    fn from_str(buffer: &str) -> Result<Self, Self::Err> {
+        let mut lines = buffer.lines();
 
         let rounds = lines
             .nth(0)
             .unwrap()
             .split(' ')
-            .map(|s| s.parse())
+            .map(|word| word.parse())
             .flatten()
             .nth(0)
             .unwrap();
 
-        let monkeys = lines.map(|l| l.parse()).flatten().collect();
+        let monkeys = lines.map(|line| line.parse()).flatten().collect();
 
         Ok(Self { rounds, monkeys })
     }
