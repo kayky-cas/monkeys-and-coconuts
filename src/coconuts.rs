@@ -1,4 +1,8 @@
-use std::str::FromStr;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+    str::FromStr,
+};
 
 struct Monkey {
     even: usize,
@@ -71,26 +75,21 @@ impl CoconutGame {
     }
 }
 
-impl FromStr for CoconutGame {
-    type Err = ();
-
-    fn from_str(buffer: &str) -> Result<Self, Self::Err> {
+impl From<BufReader<File>> for CoconutGame {
+    fn from(buffer: BufReader<File>) -> Self {
         let mut lines = buffer.lines();
 
         let rounds = lines
             .nth(0)
+            .unwrap()
             .unwrap()
             .split(' ')
             .flat_map(|word| word.parse())
             .nth(0)
             .unwrap();
 
-        let monkeys: Vec<_> = lines.map(|line| line.parse()).flatten().collect();
+        let monkeys: Vec<_> = lines.flat_map(|line| line.unwrap().parse()).collect();
 
-        if monkeys.len() < 3 {
-            Err(())
-        } else {
-            Ok(Self { rounds, monkeys })
-        }
+        Self { rounds, monkeys }
     }
 }

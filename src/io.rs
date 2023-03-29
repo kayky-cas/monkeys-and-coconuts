@@ -1,13 +1,19 @@
-use std::{fs, thread, time::Instant};
+use std::{
+    fs::{self, File},
+    io::BufReader,
+    thread,
+    time::Instant,
+};
 
 use crate::coconuts::CoconutGame;
 
 fn game_from_especific_file(input: &str) {
-    let buffer = fs::read_to_string(input).unwrap();
+    let file = File::open(input).unwrap();
+    let reader = BufReader::new(file);
 
     let stopwatch = Instant::now();
 
-    let mut game: CoconutGame = buffer.parse().unwrap();
+    let mut game: CoconutGame = reader.into();
     let (winner, coconuts) = game.play();
 
     println!(
