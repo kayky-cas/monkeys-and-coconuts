@@ -1,8 +1,4 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-    str::FromStr,
-};
+use std::str::FromStr;
 
 struct Monkey {
     even: usize,
@@ -24,14 +20,16 @@ impl FromStr for Monkey {
         let even = monkey_info[0];
         let odd = monkey_info[1];
 
-        let coconuts = &monkey_info[3..];
+        let mut even_coconuts = 0;
+        let mut odd_coconuts = 0;
 
-        let even_coconuts = coconuts
-            .iter()
-            .filter(|&coconut| coconut & 0b1 == 0)
-            .count();
-
-        let odd_coconuts = coconuts.len() - even_coconuts;
+        for &x in &monkey_info[3..] {
+            if x % 2 == 0 {
+                even_coconuts += 1;
+            } else {
+                odd_coconuts += 1;
+            }
+        }
 
         Ok(Self {
             even,
@@ -75,21 +73,22 @@ impl CoconutGame {
     }
 }
 
-impl From<BufReader<File>> for CoconutGame {
-    fn from(buffer: BufReader<File>) -> Self {
+impl FromStr for CoconutGame {
+    type Err = ();
+
+    fn from_str(buffer: &str) -> Result<Self, Self::Err> {
         let mut lines = buffer.lines();
 
         let rounds = lines
             .nth(0)
-            .unwrap()
             .unwrap()
             .split(' ')
             .flat_map(|word| word.parse())
             .nth(0)
             .unwrap();
 
-        let monkeys: Vec<_> = lines.flat_map(|line| line.unwrap().parse()).collect();
+        let monkeys: Vec<_> = lines.flat_map(|line| line.parse()).collect();
 
-        Self { rounds, monkeys }
+        Ok(Self { rounds, monkeys })
     }
 }
